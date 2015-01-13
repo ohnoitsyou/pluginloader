@@ -1,0 +1,6 @@
+{
+  "name": "foobar",
+  "description": "foo bar baz",
+  "version": "0.0.1",
+  "dependencies" : {}
+}
