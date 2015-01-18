@@ -1,6 +1,7 @@
 'use strict';
 
 var pluginloader = require('../lib/pluginloader.js');
+var Q = require('q');
 var path = require('path');
 
 /*
@@ -64,11 +65,130 @@ exports['pluginloader'] = {
     test.equal(this.loader.initilizedPlugins.length,0,"Initilized plugins list not empty");
     test.done();
   },
-  'check discovery of plugins': function(test) {
-    this.loader.discover();
-    test.expect(1);
-    test.equal(this.loader.pluginList.length, 1, "Did not discover plugin");
-    test.done();
+  'isDirectory directory success check' : function(test) {
+    this.loader.isDirectory(__dirname).then(function(result) {
+      test.expect(1);
+      test.equal(result, true, "Not a directory")
+      test.done();
+    }).catch(function(err) {
+      test.expect(1);
+      test.ok(false, "errored out");
+      test.done();
+    });
+  },
+  'isDirectory file check' : function(test) {
+    this.loader.isDirectory(__filename).then(function(result) {
+      test.expect(1);
+      test.equal(result, false, "Is a file");
+      test.done();
+    }).catch(function(err) {
+      test.expect(1);
+      test.ok(false, "errored out");
+      test.done();
+    });
+  },
+  'isValidPlugin valid check' : function(test) {
+    var plugin = path.join(__dirname, '../plugins/foobar');
+    this.loader.isValidPlugin(plugin).then(function(result) {
+      test.expect(1);
+      test.equal(result, true, "Not a valid plugin");
+      test.done();
+    }).catch(function(err) {
+      test.expect(1);
+      test.ok(false, "errored out");
+      test.done();
+    });
+  },
+  'isValidPlugin fail check' : function(test) {
+    var plugin = path.join(__dirname, '../plugins/barbaz');
+    this.loader.isValidPlugin(plugin).then(function(result) {
+      test.expect(1);
+      test.equal(result, false, "Not supposed to be a valid plugin");
+      test.done();
+    }).catch(function(err) {
+      test.expect(1);
+      test.ok(false, "errored out");
+      test.done();
+    });
+  },
+  'filterValidPlugins check' : function(test) {
+    var plugins = [path.join(__dirname,'../plugins/foobar'),
+                   path.join(__dirname,'../plugins/barbaz')];
+    this.loader.filterValidPlugins(plugins).then(function(result) {
+      // could test multiple things, and count the result + static tests
+      test.expect(2);
+      test.equal(result.length,1,"Not the right number of plugins");
+      test.equal(result[0],plugins[0],"Didn't detect the valid plugin");
+      test.done();
+    });
+  },
+  'getDirectories valid check' : function(test) {
+    var pluginDir = path.join(__dirname,'../plugins');
+    var plugins = [path.join(__dirname,'../plugins/foobar'),
+                   path.join(__dirname,'../plugins/barbaz')];
+    this.loader.getDirectories(pluginDir).then(function(result) {
+      test.expect(1);
+      test.equal(result.length,2,"Wrong number of directories");
+      test.done();
+    },function(error) {
+      test.expect(1);
+      test.ok(false, "Failed out:" + error);
+      test.done();
+    });
+  },
+  'getDirectories invalid check' : function(test) {
+    var pluginDir = __filename;
+    this.loader.getDirectories(pluginDir).then(function(result) {
+      test.expect(1);
+      test.ok(false, "SHould have failed out");
+      test.done();
+    },function(error) {
+      test.expect(1);
+      test.ok(true,error);
+      test.done();
+    });
+  },
+  'discover check' : function(test) {
+    // needed for the closure
+    var that = this;
+    this.loader.discover().then(function(result) {
+      test.expect(4);
+      test.equal(result.length, 1, "Incorrect number of plugins");
+      test.equal(result[0],path.join(__dirname,"../plugins/foobar"),"Didnt detect the right plugin");
+      test.equal(that.loader.pluginList.length,1,"Plugins not stored in pluginList");
+      test.equal(that.loader.pluginList[0], path.join(__dirname,"../plugins/foobar"),"Plugin stored path not good");
+      test.done();
+    },function(error) {
+      test.expect(1);
+      test.ok(false, "Errored out" + error);
+      test.done();
+    }).catch(function(error) {
+      console.log(error);
+    });
+  },
+  'loader check' : function(test) {
+    var that = this;
+    that.loader.discover().then(function(result) {
+      that.loader.load();
+      test.expect(1);
+      test.equal(that.loader.loadedPlugins.length, 1, "Didn't load plugin");
+      test.done();
+    }).catch(function(error) {
+      test.expect(1);
+      test.ok(false);
+      test.done();
+      console.log(error);
+    });
   }
-}   
+};
 
+
+
+
+
+
+
+
+
+
+// vim: fdm=marker:sw=2:nu:relativenumber

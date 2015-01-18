@@ -2,5 +2,7 @@
   "name": "foobar",
   "description": "foo bar baz",
   "version": "0.0.1",
-  "dependencies" : {}
+  "dependencies": {
+    "express": "~4.11.0"
+  }
 }
